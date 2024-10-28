@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:11-jdk-slim
 VOLUME /tmp
 ADD target/spring-petclinic-2.3.0.jar app.jar
 EXPOSE 8080
