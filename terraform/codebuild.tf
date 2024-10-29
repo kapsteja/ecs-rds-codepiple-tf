@@ -6,6 +6,40 @@ data "aws_caller_identity" "current" {}
 
 # Codebuild role
 
+resource "aws_iam_role_policy" "ecr_access" {
+  role   = aws_iam_role.codebuild_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Resource = [
+          "arn:aws:ecr:us-east-1:842675992953:repository/openjdk-slim" # Add this line
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "codebuild_role" {
   assume_role_policy = <<EOF
 {
