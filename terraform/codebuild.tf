@@ -174,7 +174,7 @@ phases:
       - ls -al ..
 artifacts:
   files:
-    - ../imagedefinitions.json
+    - 'imagedefinitions.json'
 BUILDSPEC
   }
 }
