@@ -117,8 +117,7 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 842675992953.dkr.ecr.us-east-1.amazonaws.com
-      - REPOSITORY_URI=842675992953.dkr.ecr.us-east-1.amazonaws.com/petclinic
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 842675992953.dkr.ecr.us-east-1.amazonaws.com
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=$${COMMIT_HASH:=latest}         
   build:
