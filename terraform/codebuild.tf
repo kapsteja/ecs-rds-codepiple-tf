@@ -169,12 +169,12 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - ls -al .
-      - cat imagedefinitions.json
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > ../imagedefinitions.json
+      - if [ -f ../imagedefinitions.json ]; then echo "File exists"; else echo "File does not exist"; fi
+      - ls -al ..
 artifacts:
   files:
-    - imagedefinitions.json
+    - ../imagedefinitions.json
 BUILDSPEC
   }
 }
