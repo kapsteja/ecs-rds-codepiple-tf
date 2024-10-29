@@ -175,7 +175,6 @@ phases:
 artifacts:
   files:
     - imagedefinitions.json
-    - **/* 
 BUILDSPEC
   }
 }
