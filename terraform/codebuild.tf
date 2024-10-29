@@ -174,7 +174,7 @@ phases:
       - cat imagedefinitions.json
 artifacts:
   files:
-    - imagedefinitions.json
+    - ./imagedefinitions.json
 BUILDSPEC
   }
 }
