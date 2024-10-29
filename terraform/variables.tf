@@ -109,29 +109,17 @@ variable "cw_log_stream" {
   default     = "fargate"
 }
 
-# Source repo name and branch
-
-variable "source_repo_name" {
-    description = "Source repo name"
-    type = string
-}
-
-variable "source_repo_branch" {
-    description = "Source repo branch"
-    type = string
-}
-
-
 # Image repo name for ECR
 
 variable "image_repo_name" {
-    description = "Image repo name"
-    type = string
+  description = "Image repo name"
+  type        = string
 }
 
 variable "github_owner" {
   description = "GitHub repository owner (user or org)"
   type        = string
+  default     = "kapsteja"
 }
 
 variable "github_repo" {
@@ -139,12 +127,12 @@ variable "github_repo" {
   type        = string
 }
 
-variable "github_token" {
-  description = "GitHub OAuth token for CodePipeline access"
-  type        = string
-  sensitive   = true
-}
 
 variable "github_branch" {
   default = "main"
+}
+
+variable "name" {
+  default = "ecs-tds-290620"
+
 }

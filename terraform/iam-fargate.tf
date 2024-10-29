@@ -4,7 +4,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "tasks-execution-role" {
-  name               = "${var.fargate-task-service-role}ECSTasksExecutionRole" 
+  name               = "${var.fargate-task-service-role}ECSTasksExecutionRole"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.tasks-service-assume-policy.json
 }
@@ -30,7 +30,7 @@ resource "aws_iam_role_policy_attachment" "tasks-execution-role-attachment" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "tasks-service-role" {
-  name               = "${var.fargate-task-service-role}ECSTasksServiceRole" 
+  name               = "${var.fargate-task-service-role}ECSTasksServiceRole"
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.tasks-service-assume-policy.json
 }

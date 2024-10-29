@@ -1,8 +1,11 @@
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Code Pipeline
 # ---------------------------------------------------------------------------------------------------------------------
 
-# CodePipeline IAM Role
+
+# Codepipeline role
+
 resource "aws_iam_role" "codepipeline_role" {
   assume_role_policy = <<EOF
 {
@@ -18,12 +21,11 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-  path = "/"
+  path               = "/"
 }
 
-# IAM Policy for CodePipeline
 resource "aws_iam_policy" "codepipeline_policy" {
-  description = "Policy to allow CodePipeline to execute"
+  description = "Policy to allow codepipeline to execute"
   policy      = <<EOF
 {
   "Version": "2012-10-17",
@@ -37,7 +39,7 @@ resource "aws_iam_policy" "codepipeline_policy" {
       "Resource": "${aws_s3_bucket.artifact_bucket.arn}/*"
     },
     {
-      "Action": [
+      "Action" : [
         "codebuild:StartBuild", "codebuild:BatchGetBuilds",
         "cloudformation:*",
         "iam:PassRole"
@@ -46,8 +48,19 @@ resource "aws_iam_policy" "codepipeline_policy" {
       "Resource": "*"
     },
     {
-      "Action": [
+      "Action" : [
         "ecs:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Action" : [
+        "codecommit:CancelUploadArchive",
+        "codecommit:GetBranch",
+        "codecommit:GetCommit",
+        "codecommit:GetUploadArchiveStatus",
+        "codecommit:UploadArchive"
       ],
       "Effect": "Allow",
       "Resource": "*"
@@ -62,29 +75,53 @@ resource "aws_iam_role_policy_attachment" "codepipeline-attach" {
   policy_arn = aws_iam_policy.codepipeline_policy.arn
 }
 
-# S3 Bucket for Artifacts
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "your-unique-artifact-bucket-name"
-  acl    = "private"
+  bucket = "tds-29062024"
 }
 
-# CodePipeline
+# Optional: Define a bucket policy to control access explicitly
+resource "aws_s3_bucket_policy" "artifact_bucket_policy" {
+  bucket = aws_s3_bucket.artifact_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "codepipeline.amazonaws.com"
+        },
+        Action   = ["s3:GetObject", "s3:PutObject"],
+        Resource = "${aws_s3_bucket.artifact_bucket.arn}/*"
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "codebuild.amazonaws.com"
+        },
+        Action   = ["s3:GetObject", "s3:PutObject"],
+        Resource = "${aws_s3_bucket.artifact_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
+
+# CodePipeline 
+
 resource "aws_codepipeline" "pipeline" {
   depends_on = [
-    aws_codebuild_project.codebuild
+    aws_codebuild_project.codebuild,
   ]
-  name     = "${var.source_repo_name}-${var.source_repo_branch}-Pipeline"
+  name     = "${var.github_repo}-${var.github_branch}-Pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
-
   artifact_store {
     location = aws_s3_bucket.artifact_bucket.bucket
     type     = "S3"
   }
 
-  # Source Stage - GitHub
   stage {
     name = "Source"
-
     action {
       name             = "Source"
       category         = "Source"
@@ -93,17 +130,15 @@ resource "aws_codepipeline" "pipeline" {
       provider         = "GitHub"
       output_artifacts = ["SourceOutput"]
       run_order        = 1
-
       configuration = {
-        Owner      = var.github_owner
-        Repo       = var.github_repo
-        Branch     = var.github_branch
-        OAuthToken = var.github_token
+        Repo      = var.github_repo
+        Branch    = var.github_branch
+         Owner      = var.github_owner 
+         OAuthToken = data.aws_ssm_parameter.github_token.value
       }
     }
   }
 
-  # Build Stage
   stage {
     name = "Build"
     action {
@@ -116,12 +151,11 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["BuildOutput"]
       run_order        = 1
       configuration = {
-        ProjectName = aws_codebuild_project.codebuild.name
+        ProjectName = aws_codebuild_project.codebuild.id
       }
     }
   }
 
-  # Deploy Stage
   stage {
     name = "Deploy"
     action {
@@ -142,7 +176,6 @@ resource "aws_codepipeline" "pipeline" {
   }
 }
 
-# Output the pipeline URL
 output "pipeline_url" {
   value = "https://console.aws.amazon.com/codepipeline/home?region=${var.aws_region}#/view/${aws_codepipeline.pipeline.id}"
 }

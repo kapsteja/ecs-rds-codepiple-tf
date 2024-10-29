@@ -1,11 +1,11 @@
 
 data "aws_ssm_parameter" "dbpassword" {
   name = "/database/password"
-#   with_decryption = true
+  #   with_decryption = true
 }
 
 data "aws_ssm_parameter" "github_token" {
-  name = "/github/token"
+  name            = "/github/token"
   with_decryption = true
 }
 

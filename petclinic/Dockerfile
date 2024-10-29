@@ -1,4 +1,4 @@
-FROM openjdk:11-jdk-slim
+FROM 842675992953.dkr.ecr.us-east-1.amazonaws.com/openjdk-slim:latest
 VOLUME /tmp
 ADD target/spring-petclinic-2.3.0.jar app.jar
 EXPOSE 8080

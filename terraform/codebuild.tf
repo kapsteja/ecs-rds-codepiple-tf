@@ -21,12 +21,12 @@ resource "aws_iam_role" "codebuild_role" {
   ]
 }
 EOF
-  path = "/"
+  path               = "/"
 }
 
 resource "aws_iam_policy" "codebuild_policy" {
   description = "Policy to allow codebuild to execute build spec"
-  policy = <<EOF
+  policy      = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -79,54 +79,53 @@ resource "aws_iam_role_policy_attachment" "codebuild-attach" {
 
 resource "aws_codebuild_project" "codebuild" {
   depends_on = [
-    
+
     aws_ecr_repository.image_repo
   ]
-  name          = "codebuild-${var.source_repo_name}-${var.source_repo_branch}"
-  service_role  = aws_iam_role.codebuild_role.arn
+  name         = "codebuild-${var.name}"
+  service_role = aws_iam_role.codebuild_role.arn
   artifacts {
     type = "CODEPIPELINE"
   }
   environment {
     compute_type                = "BUILD_GENERAL1_MEDIUM"
-    image                       = "aws/codebuild/standard:3.0"
+    image                       = "aws/codebuild/standard:5.0"
     type                        = "LINUX_CONTAINER"
     privileged_mode             = true
     image_pull_credentials_type = "CODEBUILD"
     environment_variable {
-      name = "REPOSITORY_URI"
+      name  = "REPOSITORY_URI"
       value = aws_ecr_repository.image_repo.repository_url
     }
     environment_variable {
-      name = "AWS_DEFAULT_REGION"
+      name  = "AWS_DEFAULT_REGION"
       value = var.aws_region
     }
     environment_variable {
-      name = "CONTAINER_NAME"
+      name  = "CONTAINER_NAME"
       value = var.family
     }
   }
   source {
-    type = "CODEPIPELINE"
+    type      = "CODEPIPELINE"
     buildspec = <<BUILDSPEC
 version: 0.2
-runtime-versions:
-  java: openjdk8
 phases:
   install:
     runtime-versions:
-      docker: 18
+      java: corretto8
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 842675992953.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=842675992953.dkr.ecr.us-east-1.amazonaws.com/petclinic
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=$${COMMIT_HASH:=latest}         
   build:
     commands:
+      - cd petclinic
       - echo Build started on `date`
       - echo Building the jar
-      - mvn package
       - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
@@ -136,9 +135,11 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"petclinic","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - aws s3 cp imagedefinitions.json s3://$/imagedefinitions.json
 artifacts:
-    files: imagedefinitions.json
+  files:
+    - imagedefinitions.json
 BUILDSPEC
   }
-}        
+}
