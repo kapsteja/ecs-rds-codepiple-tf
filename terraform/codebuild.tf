@@ -170,7 +170,6 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - printf '[{"name":"petclinic","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - aws s3 cp imagedefinitions.json s3://$/imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
