@@ -118,13 +118,14 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 842675992953.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=842675992953.dkr.ecr.us-east-1.amazonaws.com/petclinic
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=$${COMMIT_HASH:=latest}         
   build:
     commands:
+      - cd petclinic
       - echo Build started on `date`
       - echo Building the jar
-      - mvn package
       - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
@@ -134,9 +135,11 @@ phases:
       - echo Pushing the Docker image...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"petclinic","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - aws s3 cp imagedefinitions.json s3://$/imagedefinitions.json
 artifacts:
-    files: imagedefinitions.json
+  files:
+    - imagedefinitions.json
 BUILDSPEC
   }
 }
